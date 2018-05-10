@@ -1,0 +1,51 @@
+---
+title: "inspect"
+author: "Konner Macias"
+date: "May 10, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## What data do I want?
+# - I would like perGame and advStats for each player in 2015
+# - the salary of that player for 2015
+
+```{r}
+perGame <- read.csv("../data/player-data-wrangled/player2015/PerGame-2015wrangled.csv", stringsAsFactors = FALSE)
+
+advStats <- read.csv("../data/player-data-wrangled/player2015/Adv-2015wrangled.csv", stringsAsFactors = FALSE)
+```
+Merge the data frames
+```{r}
+pgAdv <- merge(perGame, advStats, by = c("Player","Pos","G","Tm","Age","fix"))
+pgAdv <- pgAdv[-c(7,8,33,34,48,53)]
+colnames(pgAdv)
+```
+```{r}
+summary(pgAdv)
+```
+
+# Get Player data
+```{r}
+fAgents <- read.csv('../data/salary-data/fixed-fa-signings/fixed-2015.csv', stringsAsFactors = FALSE)
+fAgents <- fAgents[-c(1,2,3,4,5,6,7)]
+colnames(fAgents)
+```
+# Merge into final data frame
+```{r}
+mega <- merge(pgAdv, fAgents, by.x = "fix", by.y ="name")
+mega <- mega[-c(1,2,3,5)]
+colnames(mega)
+```
+```{r}
+library(ggplot2)
+library(GGally)
+library(corrplot)
+M <- cor(mega)
+corrplot(M,method = "square")
+```
+
+
