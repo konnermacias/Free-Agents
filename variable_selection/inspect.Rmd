@@ -38,6 +38,7 @@ colnames(fAgents)
 ```{r}
 mega <- merge(pgAdv, fAgents, by.x = "fix", by.y ="name")
 mega <- mega[-c(1,2,3,5)]
+mega[is.na(mega)] <- 0
 colnames(mega)
 ```
 ```{r}
@@ -45,7 +46,15 @@ library(ggplot2)
 library(GGally)
 library(corrplot)
 M <- cor(mega)
-corrplot(M,method = "square")
+corrplot(M,method = "color", type = "upper")
+```
+# Noteworthy variables:
+GS, MP.x, FG, FGA, FG., X2P, X2PA, FT, FTA, ORB, DRB, TRB, STL, PS.G, MP.y, OWS, DWS, WS, BPM, VORP
+
+# Now let's look at only those
+```{r}
+M <- cor(mega[c(3,4,5,6,7,11,12,15,16,18,19,20,22,26,27,40,41,42,46,47,49)])
+corrplot.mixed(M, lower = "number", upper = "circle")
 ```
 
 
