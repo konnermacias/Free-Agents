@@ -1,0 +1,72 @@
+---
+title: "2017 Variable Selection"
+author: "Konner Macias"
+date: "May 20, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+df <- read.csv("mega-2017.csv", stringsAsFactors = FALSE)
+```
+
+```{r}
+df$FT.[is.na(df$FT.)] <- 0
+```
+
+
+```{r}
+library(corrplot)
+M <- cor(df[-c(1,2)]) # exclude names of player for correlation
+corrplot(M, method = "circle", type = "upper")
+```
+```{r}
+plot(density(df$average.salary,bw="SJ",kern="gaussian"),type="l",main="Gaussian
+kernel density estimate",xlab="Average Salary")
+```
+```{r}
+qqnorm(log(df$average.salary), ylab = "Average Salary")
+qqline(log(df$average.salary), lty = 2, col = 2)
+```
+```{r}
+qqnorm(sqrt(df$average.salary), ylab = "Average Salary")
+qqline(sqrt(df$average.salary), lty = 2, col = 2)
+```
+
+By position
+```{r}
+library(ggplot2)
+# prepare a special xlab with the number of obs for each group
+my_xlab <- paste(levels(as.factor(df$Pos)))
+ 
+# plot
+ggplot(df, aes(x=Pos, y=average.salary, fill=Pos)) +
+    geom_boxplot(varwidth = TRUE, alpha=0.2) +
+    theme(legend.position="none") +
+    scale_x_discrete(labels=my_xlab)
+```
+
+
+
+
+```{r}
+m1.aov <- aov(average.salary ~ as.factor(Pos), data = df)
+summary(m1.aov)
+```
+
+
+
+
+
+
+```{r}
+library(leaps)
+library(car)
+bm <- regsubsets(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV., data = df, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
+bm.sum <- summary(bm)
+res.legend <-subsets(bm, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
+```
+

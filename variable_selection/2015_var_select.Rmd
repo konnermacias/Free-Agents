@@ -18,7 +18,7 @@ colnames(df)
 ```
 ```{r}
 library(corrplot)
-M <- cor(df[-1]) # exclude names of player for correlation
+M <- cor(df[-c(1,2)]) # exclude names of player for correlation
 corrplot(M,method = "circle", type = "upper")
 ```
 
@@ -151,5 +151,21 @@ FG, MP, BPM, DWS, STL, BLK, G
 
 ```{r}
 which(bm.sum$which[16,]== TRUE)
+```
+
+```{r}
+library(ggplot2)
+# prepare a special xlab with the number of obs for each group
+my_xlab <- paste(levels(as.factor(df$Pos)))
+ 
+# plot
+ggplot(df, aes(x=Pos, y=average.salary, fill=Pos)) +
+    geom_boxplot(varwidth = TRUE, alpha=0.2) +
+    theme(legend.position="none") +
+    scale_x_discrete(labels=my_xlab)
+```
+```{r}
+m1.aov ~ aov(average.salary ~ as.factor(Pos), data = df)
+summary(m1.aov)
 ```
 

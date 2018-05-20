@@ -1,0 +1,87 @@
+---
+title: "2016 Variable Selection"
+author: "Konner Macias"
+date: "May 20, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+df <- read.csv("mega-2016.csv", stringsAsFactors = FALSE)
+```
+
+```{r}
+df$FT.[is.na(df$FT.)] <- 0
+library(corrplot)
+M <- cor(df[-c(1,2)]) # exclude names of player for correlation
+corrplot(M, method = "circle", type = "upper")
+```
+```{r}
+library(ggplot2)
+# prepare a special xlab with the number of obs for each group
+my_xlab <- paste(levels(as.factor(df$Pos)))
+ 
+# plot
+ggplot(df, aes(x=Pos, y=average.salary, fill=Pos)) +
+    geom_boxplot(varwidth = TRUE, alpha=0.2) +
+    theme(legend.position="none") +
+    scale_x_discrete(labels=my_xlab)
+```
+```{r}
+m1.aov <- aov(average.salary ~ as.factor(Pos), data = df)
+summary(m1.aov)
+```
+Position really doesn't affect it.
+
+```{r}
+sort(M[38,],decreasing = TRUE)
+```
+```{r}
+library(leaps)
+library(car)
+bm <- regsubsets(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV., data = df, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
+bm.sum <- summary(bm)
+res.legend <-subsets(bm, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
+```
+```{r}
+which(bm.sum$which[8,] == TRUE)
+```
+
+```{r}
+m1 <- lm(average.salary ~ FGA + WS + VORP + DRB + AST + PF + AST. + G, data = df)
+summary(m1)
+vif(m1)
+```
+Close, but VIF is obviously high for assists.
+```{r}
+which(bm.sum$which[7,] == TRUE)
+```
+```{r}
+m2 <- lm(average.salary ~ FGA + MP + WS + DRB + STL + PF + G, data = df)
+summary(m2)
+vif(m2)
+```
+Minutes played is decently high. Let's go one fewer to be safe.
+```{r}
+which(bm.sum$which[6,] == TRUE)
+```
+
+```{r}
+m3 <- lm(average.salary ~ FG + MP + WS + DRB + PF + G, data = df)
+summary(m3)
+vif(m3)
+```
+
+Let's look at shape.
+```{r}
+plot(density(df$average.salary,bw="SJ",kern="gaussian"),type="l",main="Gaussian
+kernel density estimate",xlab="Average Salary")
+```
+```{r}
+qqnorm(I(df$average.salary)^0.33, ylab = "Average Salary")
+#qqline(I(df$average.salary)^0.33, lty = 2, col = 2)
+```
+
