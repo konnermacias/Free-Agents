@@ -1,0 +1,155 @@
+---
+title: "2015 Variable Selection"
+author: "Konner Macias"
+date: "May 19, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+df <- read.csv("mega-2015.csv", stringsAsFactors = FALSE)
+```
+Look at column names
+```{r}
+colnames(df)
+```
+```{r}
+library(corrplot)
+M <- cor(df[-1]) # exclude names of player for correlation
+corrplot(M,method = "circle", type = "upper")
+```
+
+Variables that correlate the most with average salary
+```{r}
+sort(M[38,],decreasing = TRUE)
+```
+
+FG per game, Points per game, and FGA attempts per game correlate the most.
+
+```{r}
+library(leaps)
+library(car)
+bm <- regsubsets(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV., data = df, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
+bm.sum <- summary(bm)
+res.legend <-subsets(bm, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
+```
+```{r}
+bm.sum$which[10,]
+```
+
+Let's create a linear model and understand the vif of each variable.
+```{r}
+m1 <- lm(average.salary ~ FG + VORP + TRB + PF + G + DRB. + TRB. + ORB. + BLK., data = df)
+summary(m1)
+vif(m1)
+```
+
+Can't use this model, the VIF values are insane. We have to use a fewer number of variables.
+```{r}
+bm.sum$which[9,]
+```
+```{r}
+m2 <- lm(average.salary ~ FG + VORP + TRB + BLK + G + DRB. + TRB. + ORB. + BLK., data = df)
+summary(m2)
+vif(m2)
+```
+
+All the variables are significant in predicting but collinearity is way too high.
+
+Let's go smaller, the adjusted R^2 hasn't dropped by much
+```{r}
+which(bm.sum$which[8,] == TRUE)
+```
+
+```{r}
+m3 <- lm(average.salary ~ PS.G + TRB + PF + BLK + DRB. + DBPM + TRB. + ORB., data = df)
+summary(m3)
+vif(m3)
+```
+
+The rebound vif's are too much...
+```{r}
+which(bm.sum$which[5,] == TRUE)
+```
+
+```{r}
+m4 <- lm(average.salary ~ FG + VORP + DRB + BLK + G, data = df)
+summary(m4)
+vif(m4)
+```
+```{r}
+par(mfrow=c(2,2))
+plot(m4)
+```
+
+# final variables:
+FG, VORP, DRB, BLK, G
+
+
+
+Let's rethink average salary.
+
+
+```{r}
+plot(density(df$average.salary,bw="SJ",kern="gaussian"),type="l",main="Gaussian
+kernel density estimate",xlab="Average Salary")
+```
+
+
+Log transformation
+```{r}
+qqnorm(log(df$average.salary), ylab = "Average Salary")
+qqline(log(df$average.salary), lty = 2, col = 2)
+```
+
+Sqrt transformation
+```{r}
+qqnorm(sqrt(df$average.salary), ylab = "Average Salary")
+qqline(sqrt(df$average.salary), lty = 2, col = 2)
+```
+
+Cube root transformation
+```{r}
+qqnorm(I(df$average.salary)^0.33, ylab = "Average Salary")
+#qqline(I(df$average.salary)^0.33, lty = 2, col = 2)
+```
+
+```{r}
+bm2 <- regsubsets(I(average.salary)^0.33 ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV., data = df, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
+bm2.sum <- summary(bm2)
+res.legend <-subsets(bm2, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
+```
+
+Going to be awful VIF from the TRB, ORB, ...
+```{r}
+which(bm2.sum$which[8,] == TRUE)
+```
+
+```{r}
+which(bm2.sum$which[7,] == TRUE)
+```
+
+```{r}
+n1 <- lm(average.salary ~ FG + MP + BPM + DWS + STL + BLK + G, data = df)
+summary(n1)
+vif(n1)
+```
+
+VIF's are decent. Let's check the diagnostics.
+```{r}
+par(mfrow=c(2,2))
+plot(n1)
+```
+
+Not bad, let's double check with professor.
+
+# final variables in transformed model
+FG, MP, BPM, DWS, STL, BLK, G
+
+```{r}
+which(bm.sum$which[16,]== TRUE)
+```
+
