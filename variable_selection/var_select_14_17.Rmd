@@ -1,0 +1,80 @@
+---
+title: "2014-2017 Variable Selection"
+author: "Konner Macias"
+date: "May 23, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Read in data
+```{r}
+df <- read.csv("NBA-2014-2017.csv", stringsAsFactors = FALSE)
+df[is.na(df)] <- 0
+```
+
+Look at correlation between variables
+```{r}
+library(corrplot)
+M <- cor(df[-c(1,2,3,43)]) # exclude name, team, position, and year for correlation
+corrplot(M,method = "circle", type = "upper")
+```
+
+Which variables correlate the most with average salary?
+```{r}
+sort(M[39,],decreasing = TRUE)
+```
+
+FG per game, Points per Game, and FG attempts per game correlate the most.
+
+
+
+Before we start selecting variables, let's look at the density plot of average salary
+```{r}
+plot(density(df$average.salary,bw="SJ",kern="gaussian"),type="l",main="Gaussian
+kernel density estimate",xlab="Average Salary")
+```
+```{r}
+plot(density(sqrt(df$average.salary),bw="SJ",kern="gaussian"),type="l",main="Gaussian
+kernel density estimate",xlab="Average Salary")
+```
+This appears to be approximately normal.
+
+We will have to transform it to match a normal distribution.
+```{r}
+qqnorm(sqrt(df$average.salary), ylab = "Average Salary")
+qqline(sqrt(df$average.salary), lty = 2, col = 2)
+```
+We shall stick with sqrt approximation
+
+Load Libraries
+```{r}
+library(leaps)
+library(car)
+```
+
+
+
+Let's look at everything
+```{r}
+jumbo <- lm(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV. + as.factor(Tm) + as.factor(Year), data = df)
+summary(jumbo)
+inverseResponsePlot(jumbo)
+summary(powerTransform(jumbo))
+```
+
+
+
+
+```{r}
+library(leaps)
+library(car)
+bm <- regsubsets(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV. + factor(Year), data = df, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
+bm.sum <- summary(bm)
+res.legend <-subsets(bm, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
+```
+
+
+Our goal now is to find the correct model which 

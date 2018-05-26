@@ -20,7 +20,7 @@ colnames(df)
 ```
 ```{r}
 library(corrplot)
-M <- cor(df[-c(1,2)]) # exclude names of player for correlation
+M <- cor(df[-c(1,2,42)]) # exclude names, pos, and year for correlation
 corrplot(M,method = "circle", type = "upper")
 ```
 
@@ -258,7 +258,17 @@ It is significant to add these variables. So fwdAIC is better.
 ```{r}
 jumbo <- lm(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV. , data = std.df)
 summary(jumbo)
+inverseResponsePlot(jumbo)
+summary(powerTransform(jumbo))
 ```
+
+```{r}
+plot(density(log(df$average.salary),bw="SJ",kern="gaussian"),type="l",main="Gaussian
+kernel density estimate",xlab="Average Salary")
+```
+
+
+
 ```{r}
 n = length(std.df$average.salary)
 backBIC <- step(jumbo,direction="backward", data=std.df, k=log(n))
@@ -290,3 +300,9 @@ anova(backBICmodel, fwdAIC)
 ```
 
 fwdAIC wins out.
+
+
+```{r}
+summary(inverseResponsePlot())
+```
+
