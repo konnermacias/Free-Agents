@@ -14,12 +14,17 @@ Read in data
 df <- read.csv("NBA-2014-2017.csv", stringsAsFactors = FALSE)
 df[is.na(df)] <- 0
 ```
+```{r}
+head(df)
+```
+
+
 
 Look at correlation between variables
 ```{r}
 library(corrplot)
 M <- cor(df[-c(1,2,3,43)]) # exclude name, team, position, and year for correlation
-corrplot(M,method = "circle", type = "upper")
+corrplot(M[1:39,1, drop=FALSE], cl.pos='n')
 ```
 
 Which variables correlate the most with average salary?
@@ -33,12 +38,14 @@ FG per game, Points per Game, and FG attempts per game correlate the most.
 
 Before we start selecting variables, let's look at the density plot of average salary
 ```{r}
+png("Gauss.png", width = 1000, height = 500)
 plot(density(df$average.salary,bw="SJ",kern="gaussian"),type="l",main="Gaussian
-kernel density estimate",xlab="Average Salary")
+kernel density estimate (Before Transformation)",xlab="Average Salary")
 ```
 ```{r}
+png("transGauss.png", width = 1000, height = 500)
 plot(density(sqrt(df$average.salary),bw="SJ",kern="gaussian"),type="l",main="Gaussian
-kernel density estimate",xlab="Average Salary")
+kernel density estimate (After Transformation)",xlab="Average Salary")
 ```
 This appears to be approximately normal.
 
@@ -59,22 +66,240 @@ library(car)
 
 Let's look at everything
 ```{r}
-jumbo <- lm(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV. + as.factor(Tm) + as.factor(Year), data = df)
+jumbo <- lm(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + PER + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV. + factor(Tm) + factor(Year), data = df)
 summary(jumbo)
 inverseResponsePlot(jumbo)
 summary(powerTransform(jumbo))
 ```
 
-
-
-
+This is telling me not to transform it.  
+We shall try with both.
+  
+  
+# With Transformation
 ```{r}
-library(leaps)
-library(car)
-bm <- regsubsets(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV. + factor(Year), data = df, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
+bm <- regsubsets(sqrt(average.salary) ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + PER + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV. + factor(Year), data = df, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive", really.big = T)
 bm.sum <- summary(bm)
 res.legend <-subsets(bm, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
 ```
 
+```{r}
+which(bm.sum$which[10,] == TRUE)
+```
 
-Our goal now is to find the correct model which 
+```{r}
+m1 <- lm(sqrt(average.salary) ~ FG + MP + TOV + PER + WS.48 + PF + TS. + TRB. + factor(Year == '2016') + factor(Year == '2017'), data = df)
+summary(m1)
+vif(m1)
+```
+
+High VIF for PER and FG, we have to go lower
+
+```{r}
+which(bm.sum$which[9,] == TRUE)
+```
+```{r}
+m2 <- lm(sqrt(average.salary) ~ FG + MP + TOV + PER + WS.48 + PF + TRB. + factor(Year == '2016') + factor(Year == '2017'), data = df)
+summary(m2)
+vif(m2)
+```
+
+Still high
+```{r}
+which(bm.sum$which[8,] == TRUE)
+```
+```{r}
+m3 <- lm(sqrt(average.salary) ~ FG + MP + PER + WS.48 +TS. + TRB. + factor(Year == '2016') + factor(Year == '2017'), data = df)
+summary(m3)
+vif(m3)
+```
+
+Still bad.
+```{r}
+which(bm.sum$which[7,] == TRUE)
+```
+```{r}
+m4 <- lm(sqrt(average.salary) ~ FG + MP + WS + G + TRB. + factor(Year == '2016') + factor(Year == '2017'), data = df)
+summary(m4)
+vif(m4)
+```
+and bingo was his name-o.
+
+Let's check model diagnostics
+```{r}
+par(mfrow=c(2,2))
+plot(m4)
+```
+
+I'm going to need new underwear...
+
+
+# Now let's cluster the players
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Let's do without transformation
+```{r}
+bm2 <- regsubsets(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + PER + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV. + factor(Year), data = df, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive", really.big = T)
+bm2.sum <- summary(bm2)
+res.legend <-subsets(bm2, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
+```
+
+
+```{r}
+which(bm.sum$which[7,] == TRUE)
+```
+```{r}
+n1 <- lm(average.salary ~ FG + MP + WS + G + TS. + TRB. + factor(Year == "2016") + factor(Year == "2017"), data = df)
+summary(n1)
+vif(n1)
+```
+
+Good. Let's check diagnostics.
+```{r}
+par(mfrow=c(2,2))
+plot(n1)
+```
+
+Not as valid, we see increasing variance.
+
+# Average Salary by Team
+```{r}
+a1 <- aov(average.salary ~ Tm, data = df)
+summary(a1)
+```
+```{r}
+require(Hmisc)
+summary(average.salary ~ factor(Tm), data = df)
+```
+
+
+Based on ANOVA, we see that there is a significant difference in team's average salary. We will use Fisher's LSD test to investigate which teams are different.
+```{r}
+#library(DescTools)
+#PostHocTest(aov(average.salary~factor(Tm), data = df),method="lsd")
+```
+
+```{r}
+summary(lm(average.salary ~ factor(Tm), df))
+```
+
+Even with this, adding the team into the model did not prove significant enough to add in. 
+```{r}
+withTeams <- lm(sqrt(average.salary) ~ FG + MP + WS + G + TRB. + factor(Year == '2016') + factor(Year == '2017') + factor(Tm), data = df)
+summary(withTeams)
+vif(withTeams)
+```
+
+adding what their team is does not prove significant.
+
+# Ridge Regression
+"Important" coefficients are large in value, Ridge Regression requires that the predictors be standardized to have SD=1 before beginning this is because they react to units of measurement, since large numbers will play a bigger role.
+
+# The Lasso
+Ridge regression has a disadvantage of including all predictors in the final model. The Lasso shrinks the coefficient estimates toward zero but also forces some coefficient estimates to be exactly zero when lambda is lare. This yield models with only a subset of the variables. Selecting the correct value of lambda is critical.
+
+# Principal Components Regression
+Popular approach for deriving a low-dimensional set of features from a large set of variables. 
+```{r}
+#install.packages("pls")
+library(ggplot2)
+library(ISLR)
+library(readr)
+```
+
+
+```{r}
+nba.t=transform(df,sqSal=sqrt(average.salary))
+nba.t=subset(nba.t,select=-c(average.salary,fix,Tm,Pos))
+head(nba.t)
+```
+
+```{r}
+attach(nba.t)
+```
+
+```{r}
+X = nba.t[,-c(40)]
+head(X)
+```
+
+
+```{r}
+out.pc = princomp(X, cor = F) # does same thing as standardizing variables
+summary(out.pc)
+```
+```{r}
+out.pc$loadings
+```
+```{r}
+plot(out.pc)
+```
+
+```{r}
+set.seed(42) # for cross validation
+library(pls)
+pcr.fit = pcr(sqSal~., data=nba.t, scale = F, validation = "CV")
+summary(pcr.fit)
+```
+```{r}
+validationplot(pcr.fit, val.type="MSEP")
+```
+
+Let's fit with 9 PCs
+```{r}
+pcr.9pc = pcr(sqSal~., data=nba.t, scale = T, ncomp = 9)
+summary(pcr.9pc)
+pcr.9pc$loadings
+```
+
+```{r}
+predplot(pcr.9pc)
+```
+```{r}
+coefplot(pcr.9pc)
+```
+
+```{r}
+
+# Train-test split
+#train <- df[1:500,]
+#y_test <- df[500:773, 43]
+#test <- iris[120:150, 2:5]
+    
+#pcr_model <- pcr(Sepal.Length~., data = train,scale =TRUE, validation = "CV")
+ 
+#pcr_pred <- predict(pcr_model, test, ncomp = 3)
+#mean((pcr_pred - y_test)^2)
+```
+```{r}
+pcr.9pc$loadings
+```
+
+```{r}
+obsfit <- plot(pcr.9pc)
+Residuals <- obsfit[,1] - obsfit[,2]
+qqnorm(Residuals)
+#plot(mod, "validation", estimate = c("train", "CV"), legendpos = "topright")
+#plot(mod, "validation", estimate = c("train", "CV"), val.type = "R2",
+#legendpos = "bottomright")
+#scoreplot(mod, labels = rownames(mtcars_TRAIN))
+```
+
