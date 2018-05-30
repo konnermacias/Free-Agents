@@ -316,6 +316,7 @@ sum(abs(test.17$predSalary - test.17$average.salary))/nrow(test.17)
 
 
 ```{r}
+png("regsubsets.png", width = 500, height = 500)
 bm17s <- regsubsets(sqrt(average.salary) ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + PER + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV., data = df17, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
 bm17s.sum <- summary(bm17s)
 res.legend <-subsets(bm17s, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
@@ -327,13 +328,54 @@ which(bm17s.sum$which[6,] == TRUE)
 ```
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ```{r}
+png("model.png", width = 1000, height = 1000)
 w1 <- lm(sqrt(average.salary) ~ MP + WS + STL + TS. + G + ORB.,df17)
 summary(w1)
 vif(w1)
 ```
 
 ```{r}
+png("diagnostics.png", width = 1000, height = 1000)
 par(mfrow=c(2,2))
 plot(w1)
 ```
@@ -351,8 +393,105 @@ row.names(test.17.t) <- 1:nrow(test.17.t)
 Error
 ```{r}
 paste0("Error by cluster: ",sum(abs(test.17$onOff))/nrow(test.17))
-paste0("Error by pay: ",sum(abs(test.17$predSalary - test.17$average.salary))/nrow(test.17))
+paste0("Error by pay: ",mean(abs(test.17$predSalary - test.17$average.salary)))
 ```
+
+
+```{r}
+plyr.17.18 <- read.csv("player17_18.csv", stringsAsFactors = F)
+```
+
+```{r}
+clus18_19 <- function(x) {
+  perCen <- x / 101000000 # 18-19 projection
+  ifelse(perCen < 0.02,1,
+         ifelse(perCen >= 0.02 & perCen < 0.04,2,
+                ifelse(perCen >= 0.04 & perCen < 0.07,3,
+                       ifelse(perCen >= 0.07 & perCen < 0.10,4,
+                       ifelse(perCen >= 0.10 & perCen < 0.13,5,
+                              ifelse(perCen >= 0.13 & perCen < 0.16,6,
+                                     ifelse(perCen >= 0.16 & perCen < 0.19,7,8)))))))
+}
+```
+
+
+MP,WS,STL,TS%,G,ORB%
+```{r}
+final <- plyr.17.18[c(1,6,35,18,23,4,25)]
+final$predSalary <- predict(w1,final)^2
+final$predCluster <- apply(final[8],2,clus18_19)
+row.names(final) <- 1:nrow(final)
+```
+
+
+Now we get free agents
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -578,8 +717,8 @@ aghgahgahghaghagh
 
 Error
 ```{r}
-paste0("Error by cluster: ",sum(abs(testy$onOff))/nrow(testy))
-paste0("Error by pay: ",sum(abs(testy$predSalary - testy$average.salary))/nrow(testy))
+#paste0("Error by cluster: ",sum(abs(testy$onOff))/nrow(testy))
+paste0("Error by pay: ",mean(abs(testy$predSalary - testy$average.salary)))
 ```
 
 
