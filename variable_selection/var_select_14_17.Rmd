@@ -38,9 +38,12 @@ FG per game, Points per Game, and FG attempts per game correlate the most.
 
 Before we start selecting variables, let's look at the density plot of average salary
 ```{r}
-png("Gauss.png", width = 1000, height = 500)
+png("Gauss.png", width = 1500, height = 750)
+par(mfrow=c(1,2))
 plot(density(df$average.salary,bw="SJ",kern="gaussian"),type="l",main="Gaussian
 kernel density estimate (Before Transformation)",xlab="Average Salary")
+plot(density(sqrt(df$average.salary),bw="SJ",kern="gaussian"),type="l",main="Gaussian
+kernel density estimate (After Transformation)",xlab="Average Salary")
 ```
 ```{r}
 png("transGauss.png", width = 1000, height = 500)
@@ -135,6 +138,165 @@ I'm going to need new underwear...
 
 
 # Now let's cluster the players
+We want to write a function to apply to these 17-18 salary data
+```{r}
+
+clus.17.18 <- function(x) {
+  yearCap <- 99093000
+  perCen <- x / yearCap
+  if (perCen < 0.02){
+        return(1)
+  }else if ((perCen >= 0.02) && (perCen < 0.04)) {
+        return(2)
+  }else if (perCen >= 0.04 && perCen < 0.07) {
+        return(3)
+  }else if (perCen >= 0.07 && perCen < 0.10) {
+        return(4)
+  }else if (perCen >= 0.10 && perCen < 0.13) {
+        return(5)
+  }else if (perCen >= 0.13 && perCen < 0.16) {
+        return(6)
+  }else if (perCen >= 0.16 && perCen < 0.19) {
+        return(7)
+  } else {
+        return(8)
+   }
+}
+```
+
+```{r}
+head(df)
+```
+
+```{r}
+clus17_18 <- function(x) {
+  perCen <- x / 99093000
+  ifelse(perCen < 0.02,1,
+         ifelse(perCen >= 0.02 & perCen < 0.04,2,
+                ifelse(perCen >= 0.04 & perCen < 0.07,3,
+                       ifelse(perCen >= 0.07 & perCen < 0.10,4,
+                       ifelse(perCen >= 0.10 & perCen < 0.13,5,
+                              ifelse(perCen >= 0.13 & perCen < 0.16,6,
+                                     ifelse(perCen >= 0.16 & perCen < 0.19,7,8)))))))
+}
+```
+
+
+FG,
+MP,
+WS,
+G,
+TRB.
+Year
+Now we just need to predict
+```{r}
+test <- df[c(1,7,6,4,28,36,43,42)]
+test$predSalary <- predict(m4,test)^2
+test$actCluster <- apply(test[8],2,clus17_18)
+test$predCluster <- apply(test[9],2,clus17_18)
+test$onOff <- test$predCluster - test$actCluster
+row.names(test) <- 1:nrow(test)
+test17 <- test[test$Year == 2017,]
+row.names(test17) <- 1:nrow(test17)
+```
+
+```{r}
+sum(abs(test17$onOff))/nrow(test17)
+```
+
+
+Figure out total error
+```{r}
+test17 <- test17[-29,]
+row.names(test17) <- 1:nrow(test17)
+```
+
+```{r}
+sum(abs(test17$onOff))/nrow(test17)
+```
+
+Off in money
+```{r}
+sum(abs(test17$predSalary - test17$average.salary))/nrow(test17)
+```
+
+
+
+
+
+
+# Create local model for 2017
+```{r}
+df17 <- df[df$Year == 2017,]
+```
+```{r}
+df17 <- df17[-29,]
+row.names(df17) <- 1:nrow(df17)
+df17
+```
+
+
+
+```{r}
+plot(density(sqrt(df17$average.salary),bw="SJ",kern="gaussian"),type="l",main="Gaussian
+kernel density estimate (Before Transformation)",xlab="Average Salary")
+```
+
+
+```{r}
+jumbo17 <- lm(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + PER + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV. + factor(Tm), data = df17)
+summary(jumbo17)
+inverseResponsePlot(jumbo17)
+summary(powerTransform(jumbo17))
+```
+
+Now run regsubsets
+```{r}
+bm17 <- regsubsets(average.salary ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + PER + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV., data = df17, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
+bm17.sum <- summary(bm17)
+res.legend <-subsets(bm17, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
+```
+
+
+
+```{r}
+which(bm17.sum$which[5,] == TRUE)
+```
+
+
+```{r}
+f1 <- lm(average.salary ~ MP + WS + STL + TS. + G, df17)
+summary(f1)
+vif(f1)
+```
+Aight let's get it
+```{r}
+par(mfrow=c(2,2))
+plot(f1)
+```
+
+
+160 is isaiah thomas.
+
+MP,WS,STL,TS.,G
+```{r}
+test.17 <- df17[c(1,6,36,18,24,4,42)]
+test.17$predSalary <- predict(f1,test.17)
+test.17$actCluster <- apply(test.17[7],2,clus17_18)
+test.17$predCluster <- apply(test.17[8],2,clus17_18)
+test.17$onOff <- test.17$predCluster - test.17$actCluster
+row.names(test.17) <- 1:nrow(test.17)
+```
+
+
+Let's check error
+```{r}
+sum(abs(test.17$onOff))/nrow(test.17)
+```
+
+```{r}
+sum(abs(test.17$predSalary - test.17$average.salary))/nrow(test.17)
+```
 
 
 
@@ -148,6 +310,49 @@ I'm going to need new underwear...
 
 
 
+
+
+
+
+
+```{r}
+bm17s <- regsubsets(sqrt(average.salary) ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + PER + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV., data = df17, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
+bm17s.sum <- summary(bm17s)
+res.legend <-subsets(bm17s, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
+```
+
+
+```{r}
+which(bm17s.sum$which[6,] == TRUE)
+```
+
+
+```{r}
+w1 <- lm(sqrt(average.salary) ~ MP + WS + STL + TS. + G + ORB.,df17)
+summary(w1)
+vif(w1)
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(w1)
+```
+
+MP,WS,STL,TS.,G,ORB.
+```{r}
+test.17.t <- df17[c(1,6,36,18,24,4,26,42)]
+test.17.t$predSalary <- predict(w1,test.17.t)^2
+test.17.t$actCluster <- apply(test.17.t[8],2,clus17_18)
+test.17.t$predCluster <- apply(test.17.t[9],2,clus17_18)
+test.17.t$onOff <- test.17.t$predCluster - test.17.t$actCluster
+row.names(test.17.t) <- 1:nrow(test.17.t)
+```
+
+Error
+```{r}
+paste0("Error by cluster: ",sum(abs(test.17$onOff))/nrow(test.17))
+paste0("Error by pay: ",sum(abs(test.17$predSalary - test.17$average.salary))/nrow(test.17))
+```
 
 
 
@@ -227,7 +432,7 @@ library(readr)
 
 
 ```{r}
-nba.t=transform(df,sqSal=sqrt(average.salary))
+nba.t = df
 nba.t=subset(nba.t,select=-c(average.salary,fix,Tm,Pos))
 head(nba.t)
 ```
@@ -273,6 +478,9 @@ pcr.9pc$loadings
 ```{r}
 predplot(pcr.9pc)
 ```
+
+
+
 ```{r}
 coefplot(pcr.9pc)
 ```
@@ -302,4 +510,80 @@ qqnorm(Residuals)
 #legendpos = "bottomright")
 #scoreplot(mod, labels = rownames(mtcars_TRAIN))
 ```
+
+
+```{r}
+nba.t2 = transform(df17,sqSal = sqrt(average.salary))
+nba.t2=subset(nba.t2,select=-c(average.salary,fix,Tm,Pos))
+head(nba.t2)
+```
+
+```{r}
+attach(nba.t2)
+```
+```{r}
+X = nba.t2[,-c(39,40)]
+head(X)
+```
+```{r}
+out.pc = princomp(X, cor = F) # does same thing as standardizing variables
+summary(out.pc)
+```
+
+Like 4 components
+```{r}
+out.pc$loadings
+```
+
+
+
+
+
+```{r}
+set.seed(42) # for cross validation
+pcr.fit = pcr(sqSal~., data=nba.t2, scale = F, validation = "CV")
+summary(pcr.fit)
+```
+
+
+
+```{r}
+pcr.9pc = pcr(sqSal~., data=nba.t2, scale = F, ncomp = 9)
+summary(pcr.9pc)
+pcr.9pc$loadings
+```
+
+
+
+
+```{r}
+predplot(pcr.9pc)
+```
+
+
+Aight so let's see what we got.
+```{r}
+ncol(df17)
+testy <- df17
+testy$predSalary <- predict(pcr.9pc,testy)^2
+testy[44]
+testy$actCluster <- apply(testy[42],2,clus17_18)
+testy$predCluster <- apply(testy[44],2,clus17_18)
+testy$onOff <- testy$predCluster - testy$actCluster
+row.names(testy) <- 1:nrow(testy)
+```
+
+aghgahgahghaghagh
+
+
+Error
+```{r}
+paste0("Error by cluster: ",sum(abs(testy$onOff))/nrow(testy))
+paste0("Error by pay: ",sum(abs(testy$predSalary - testy$average.salary))/nrow(testy))
+```
+
+
+
+
+
 
