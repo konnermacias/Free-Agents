@@ -235,6 +235,100 @@ row.names(df17) <- 1:nrow(df17)
 df17
 ```
 
+```{r}
+write.csv(df17, file = 'mega-2017-norooks.csv')
+```
+
+
+```{r}
+any(is.na(df17$WS))
+```
+
+
+```{r}
+plot(density(sqrt(df17$WS),bw="SJ",kern="gaussian"),type="l",main="Gaussian
+kernel density estimate (Before Transformation)",xlab="Average Salary")
+```
+
+```{r}
+ws.bm <- regsubsets(sqrt(WS) ~ FG + PS.G + FGA + MP + FTA + FT + VORP + TOV + PER + DRB + GS + BPM + OBPM + USG. + TRB + STL + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV., data = df17, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
+ws.bm.sum <- summary(ws.bm)
+res.legend <-subsets(ws.bm, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
+```
+
+```{r}
+which(ws.bm.sum$which[8,] == TRUE)
+```
+
+
+
+
+
+
+
+
+
+```{r}
+df17c <- read.csv('mega-2017_clustering.csv', stringsAsFactors = F)
+df17c <- df17c[c(2,12)]
+df17c <- merge(df17c, df17, by = 'fix')
+View(df17c)
+```
+
+
+
+
+
+```{r}
+clus.bm <- regsubsets(sqrt(average.salary) ~ perf_cluster + WS + OWS + DWS + FG + PS.G + FGA + MP + FTA + FT + VORP + TOV + PER + DRB + GS + BPM + OBPM + USG. + TRB + STL + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV., data = df17c, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
+clus.bm.sum <- summary(clus.bm)
+res.legend <-subsets(clus.bm, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
+```
+
+
+```{r}
+which(clus.bm.sum$which[6,] == T)
+```
+
+```{r}
+c1 <- lm(sqrt(average.salary) ~ over_under + WS + FGA + MP + OBPM + G, df17c)
+summary(c1)
+vif(c1)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ```{r}
@@ -400,6 +494,10 @@ paste0("Error by pay: ",mean(abs(test.17$predSalary - test.17$average.salary)))
 ```{r}
 plyr.17.18 <- read.csv("player17_18.csv", stringsAsFactors = F)
 ```
+```{r}
+View(plyr.17.18)
+```
+
 
 ```{r}
 clus18_19 <- function(x) {
