@@ -316,7 +316,7 @@ sum(abs(test.17$predSalary - test.17$average.salary))/nrow(test.17)
 
 
 ```{r}
-png("regsubsets.png", width = 500, height = 500)
+png("regsubsets.png", width = 500, height = 750)
 bm17s <- regsubsets(sqrt(average.salary) ~ FG + PS.G + FGA + MP + FTA + FT + WS + VORP + TOV + PER + OWS + DRB + GS + BPM + OBPM + DWS + USG. + TRB + STL + WS.48 + AST + PF + ORB + TS. + AST. + BLK + FG. + G + DRB. + eFG. + FTr + DBPM + TRB. + FT. + STL. + ORB. + BLK. + TOV., data = df17, nbest=1, nvmax=NULL, force.in=NULL, force.out=NULL,method="exhaustive")
 bm17s.sum <- summary(bm17s)
 res.legend <-subsets(bm17s, statistic="adjr2", legend = FALSE, min.size = 3, max.size = 12, main = "Adjusted R^2")
@@ -425,8 +425,32 @@ row.names(final) <- 1:nrow(final)
 
 
 Now we get free agents
+```{r}
+free.agents <- read.csv('2018-fa-list.csv', stringsAsFactors = F)
+```
+
+```{r}
+colnames(free.agents)[1] <- "fix"
+View(free.agents)
+```
+
+```{r}
+newFA <- merge (free.agents, final, by="fix")
+newFA <- rbind (newFA, lebron)
+#View(newFA)
+```
+
+```{r}
+PG <- final[91,]
+newFA <- rbind(newFA,PG)
+row.names(newFA) <- 1:nrow(newFA)
+```
 
 
+```{r}
+lebron <- final[127,]
+#View(lebron)
+```
 
 
 
