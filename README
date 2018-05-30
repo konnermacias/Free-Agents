@@ -1,0 +1,54 @@
+
+==============================================================
+== Predicting NBA Salaries using Multiple Linear Regression ==
+==============================================================
+By Konner Macias, Nikhil Sharma, Ben Messinger, & Ronaq Virdi
+
+
+A stepping stone on our quest of uncovering what NBA players 
+deserve in terms of salary. We went down many different paths
+in hopes for gaining a better hollistic understanding, and 
+to improve our accuracy in predictions. We achieved our personal
+goal of creating a statistically valid model, as we were
+mentored by UCLA Statistics Professor, Akram Almohalwas. We
+will continue to improve upon our model as time goes on. As for
+now, we have creating a perfectly sound multiple linear
+regression model that predicts NBA salaries.
+
+We created a model targeted for those entering free agency for 
+the 2018-2019 season, and we also created a model that predicts
+salaries in hindsight over the past 4 previous seasons.
+
+
+Most of our data was gathered by those who already attempted
+this project, but had made fatal errors in their variable and
+model selection. Credit goes to:
+https://github.com/wwu2020/KNN-NBA-FA
+
+Please note that we only took their data, and did not run or 
+copy any of their code.
+
+====================
+== Included Files ==
+====================
+data
+	Folder that contains NBA player's perGame and advanced
+	statistics along with free agent lists, and salaries for
+	years 2011-2017.
+
+variable_selection
+	Folder that contains majority of our own work in wrangling
+	the data using jupyter notebooks, and building models
+	using R.
+
+	The most important files are the Better Data.ipynb and 
+	var_select_14_17.Rmd to better understand the scope of 
+	our work.
+
+
+====================
+== Final Comments ==
+====================
+Our data is free for anyone to use, if you find it fitting for 
+your own project. Our code however, should not be replicated.
+
