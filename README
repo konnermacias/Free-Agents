@@ -37,14 +37,7 @@ data
 	years 2011-2017.
 
 variable_selection
-	Folder that contains majority of our own work in wrangling
-	the data using jupyter notebooks, and building models
-	using R.
-
-	The most important files are the Better Data.ipynb and 
-	var_select_14_17.Rmd to better understand the scope of 
-	our work.
-
+	Still in progress.
 
 ====================
 == Final Comments ==
