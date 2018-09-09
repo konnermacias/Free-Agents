@@ -469,7 +469,7 @@ vif(w1)
 ```
 
 ```{r}
-png("diagnostics.png", width = 1000, height = 1000)
+png("diagnostics.png", width = 750, height = 500)
 par(mfrow=c(2,2))
 plot(w1)
 ```
@@ -552,7 +552,18 @@ lebron <- final[127,]
 
 
 
+```{r}
+sortDf <- newFA[order(-newFA$predCluster),]
+row.names(sortDf) <- 1:nrow(sortDf)
+View(sortDf)
+```
 
+knitr
+```{r}
+library(knitr)
+png('table.png', height = 250, width = 250)
+print(kable(head(sortDf[c(1,8,9)]), format = "latex"))
+```
 
 
 
