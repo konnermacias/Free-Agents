@@ -1,0 +1,92 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+setwd("/Users/nikhilsharma/Downloads")
+data <- read_csv("regular_season_players.csv")
+#View(data)
+```
+
+```{r}
+library(stringr)
+data$player <- gsub("[*].*$","",data$player)
+```
+
+
+```{r}
+fa <- read_csv("fa3.csv")
+full <- read_csv("full3.csv")
+```
+
+```{r}
+full$player[full$player == "DeJaun Blair"] <- "DeJuan Blair"
+full$player[full$player == "e Holiday"] <- "Jrue Holiday"
+full$player[full$player == "Edrice Adebayo"] <- "Bam Adebayo"
+full$player[full$player == "J.J Hickson"] <- "J.J. Hickson"
+full$player[full$player == "James McAdoo"] <- "James Michael McAdoo"
+full$player[full$player == "John Lucas"] <- "John Lucas III"
+full$player[full$player == "LaVoy Allen"] <- "Lavoy Allen"
+full$player[full$player == "Laui Markkanen"] <- "Lauri Markkanen"
+full$player[full$player == "TJ Leaf"] <- "T.J. Leaf"
+full$player[full$player == "Walker RussellJr"] <- "Walker Russell"
+```
+
+```{r}
+new <- merge(data, full, by=c("player", "i"), all.y=TRUE)
+#View(new)
+```
+
+```{r}
+View(new[!complete.cases(new[,8]), ])
+```
+
+```{r}
+new2 <- new[complete.cases(new[,8]), ]
+#View(new2)
+```
+
+```{r}
+fa$i <- fa$i - 1
+```
+
+```{r}
+new2$Contract <- 0
+```
+
+```{r}
+new2$player_year <- paste(new2$player, new2$i, sep = " ")
+fa$player_year <- paste(fa$player, fa$i, sep = " ")
+```
+
+```{r}
+x <- fa$player_year
+```
+
+```{r}
+new2$contract_update <- ifelse (new2$player_year %in% x, 1, 0)
+```
+
+```{r}
+table(new2$contract_update)
+```
+
+
+```{r}
+new2 <- new2[,-c(3, 4, 51, 52, 53, 55, 56)]
+```
+
+```{r}
+names(new2)[c(5,50)] <- c("team", "contract_year")
+```
+
+```{r}
+write.csv(new2, file="fun_data.csv")
+```
+

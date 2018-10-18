@@ -1,0 +1,113 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+setwd("/Users/nikhilsharma/Downloads")
+fa_new <- read_csv("fa_new.csv")
+full_new <- read_csv("full_new.csv")
+```
+
+```{r}
+View(fa_new)
+View(full_new)
+```
+
+```{r}
+library(stringr)
+
+for (i in 1:nrow(full_new)){
+  
+  if (str_detect(full_new[i, 2], "Jr.") == TRUE) {
+    full_new[i,2] <- str_remove_all(full_new[i,2], "Jr.")
+  }
+  
+  if (str_detect(full_new[i, 2], "III") == TRUE) {
+    full_new[i,2] <- str_remove_all(full_new[i,2], "III")
+  }
+  
+  if (str_detect(full_new[i, 2], "II") == TRUE) {
+    full_new[i,2] <- str_remove_all(full_new[i,2], "II")
+  }
+  
+}
+```
+
+```{r}
+full_new$player[full_new$player == "C.J. McCollum"] <- "CJ McCollum"
+full_new$player[full_new$player == "Christapher Johnson"] <- "Chris Johnson"
+full_new$player[full_new$player == "Dennis Schröder"] <- "Dennis Schroder"
+full_new$player[full_new$player == "DJ Wilson"] <- "D.J. Wilson"
+full_new$player[full_new$player == "Frank Ntilinkina"] <- "Frank Ntilikina"
+full_new$player[full_new$player == "Ishmael Smith"] <- "Ish Smith"
+full_new$player[full_new$player == "Jamorio Moon"] <- "Jamario Moon"
+full_new$player[full_new$player == "Jermey Pargo"] <- "Jeremy Pargo"
+full_new$player[full_new$player == "Louis Williams"] <- "Lou Williams"
+full_new$player[full_new$player == "Louis Amundson"] <- "Lou Amundson"
+full_new$player[full_new$player == "Luc Richard"] <- "Luc Mbah a Moute"
+full_new$player[full_new$player == "Metta WorldPeace"] <- "Metta World Peace"
+full_new$player[full_new$player == "Nando DeColo"] <- "Nando De Colo"
+full_new$player[full_new$player == "Patrick Mills"] <- "Patty Mills"
+full_new$player[full_new$player == "Patrick Mills"] <- "Patty Mills"
+full_new$player[full_new$player == "Patrick Mills"] <- "Patty Mills"
+full_new$player[full_new$player == "Toure Murry"] <- "Toure' Murry"
+full_new$player[full_new$player == "Jose Barea"] <- "J.J. Barea"
+
+```
+
+```{r}
+library(stringr)
+
+for (i in 1:nrow(fa_new)){
+  
+  if (str_detect(fa_new[i, 2], "Jr.") == TRUE) {
+    fa_new[i,2] <- str_remove_all(fa_new[i,2], "Jr.")
+  }
+  
+  if (str_detect(fa_new[i, 2], "III") == TRUE) {
+    fa_new[i,2] <- str_remove_all(fa_new[i,2], "III")
+  }
+  
+  if (str_detect(fa_new[i, 2], "II") == TRUE) {
+    fa_new[i,2] <- str_remove_all(fa_new[i,2], "II")
+  }
+  
+}
+```
+
+```{r}
+fa_new$player[fa_new$player == "C.J. McCollum"] <- "CJ McCollum"
+fa_new$player[fa_new$player == "Christapher Johnson"] <- "Chris Johnson"
+fa_new$player[fa_new$player == "Dennis Schröder"] <- "Dennis Schroder"
+fa_new$player[fa_new$player == "DJ Wilson"] <- "D.J. Wilson"
+fa_new$player[fa_new$player == "Frank Ntilinkina"] <- "Frank Ntilikina"
+fa_new$player[fa_new$player == "Ishmael Smith"] <- "Ish Smith"
+fa_new$player[fa_new$player == "Jamorio Moon"] <- "Jamario Moon"
+fa_new$player[fa_new$player == "Jermey Pargo"] <- "Jeremy Pargo"
+fa_new$player[fa_new$player == "Louis Williams"] <- "Lou Williams"
+fa_new$player[fa_new$player == "Louis Amundson"] <- "Lou Amundson"
+fa_new$player[fa_new$player == "Luc Richard"] <- "Luc Mbah a Moute"
+fa_new$player[fa_new$player == "Metta WorldPeace"] <- "Metta World Peace"
+fa_new$player[fa_new$player == "Nando DeColo"] <- "Nando De Colo"
+fa_new$player[fa_new$player == "Patrick Mills"] <- "Patty Mills"
+fa_new$player[fa_new$player == "Patrick Mills"] <- "Patty Mills"
+fa_new$player[fa_new$player == "Patrick Mills"] <- "Patty Mills"
+fa_new$player[fa_new$player == "Toure Murry"] <- "Toure' Murry"
+fa_new$player[fa_new$player == "Jose Barea"] <- "J.J. Barea"
+
+```
+
+
+```{r}
+write.csv(fa_new, file="fa3.csv")
+write.csv(full_new, file="full3.csv")
+```
+
+
+
